@@ -37,7 +37,7 @@ fn life_step(inputs: &[Series]) -> PolarsResult<Series> {
             // Life logic
             Some(match (val, prev_row + curr_row + next_row + val) {
                 (1, alive) if alive == 3 || alive == 4 => 1,
-                (0, alive) if alive == 3 => 1,
+                (0, 3) => 1,
                 _ => 0,
             })
         })
