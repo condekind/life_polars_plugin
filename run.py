@@ -1,19 +1,28 @@
 import argparse
 import contextlib
-import fileinput
 import io
 import sys
+from collections import OrderedDict
 from itertools import tee, islice
 from time import sleep
 from typing import Iterable
 
-from game_of_life import life_step
+from game_of_life import life_step, parse_board, board_to_df
 import polars as pl
 
 
 def nwise[T](iterable: Iterable[T], n: int):
     """Return overlapping n-tuples from an iterable."""
     iterators = tee(iterable, n)
+    return [
+        list(z) for z in zip(*(islice(it, i, None) for i, it in enumerate(iterators)))
+    ]
+
+def nwise_wrapping[T](iterable: Iterable[T], n: int):
+    """Return overlapping n-tuples from an iterable."""
+    elements = list(iterable)
+    to_be_wrapped = elements[-(n-2):] + elements + elements[:n-2]
+    iterators = tee(to_be_wrapped, n)
     return [
         list(z) for z in zip(*(islice(it, i, None) for i, it in enumerate(iterators)))
     ]
@@ -42,20 +51,9 @@ class Application:
         # [-n]
         self.steps: int = self._args.num_steps
 
-        try:
-            board = [
-                [c for ch in ln.strip() if (c := int(ch)) in [0, 1]]
-                for line in fileinput.input(self.ifile)
-                if len(ln := line.strip()) > 0
-            ]
-        except FileNotFoundError:
-            raise FileNotFoundError(f"Input file: '{self.ifile}' not found!")
+        # Creates a pl.DataFrame from the provided file
+        self.df = board_to_df(parse_board(self.ifile))
 
-        board_t_dict = {f"{idx:02}": row for idx, row in enumerate(board)}
-        # Initial board
-        self.df = pl.DataFrame(
-            board_t_dict,
-        )
 
     def __str__(self) -> str:
         res = io.StringIO()
@@ -79,7 +77,7 @@ class Application:
             delay = self.delay
 
         # colnums: [['00', '01', '02'], ['01', '02', '03'], ... ]
-        colnums = nwise([f"{idx:02}" for idx in range(self.df.width)], 3)
+        colnums = nwise_wrapping([f"{idx:02}" for idx in range(self.df.width)], 3)
 
         # colnames: ['01', '02', '03', ... ]
         colnames = [cols[1] for cols in colnums]
@@ -96,7 +94,7 @@ class Application:
             try:
                 for _ in range(n):
                     self.df = self.df.with_columns(
-                        **dict(zip(colnames, colvalues)),
+                        **OrderedDict(zip(colnames, colvalues)),
                     )
                     # Clear screen
                     print("\033[2J")
