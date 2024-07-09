@@ -1,5 +1,3 @@
-import polars as pl
-from game_of_life import life_step
 
 
 def test_block():
