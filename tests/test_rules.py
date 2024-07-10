@@ -1,10 +1,8 @@
 import polars as pl
-import pytest
 from polars.testing import assert_frame_equal
 from game_of_life import step
 
 
-@pytest.mark.xfail(strict=False, reason="No idea why this fails")
 def test_011110010():
     # Initial board
     df = pl.DataFrame(
@@ -17,15 +15,17 @@ def test_011110010():
 
     # 1 iteration
     df = step(df)
-    # For some reason at this point the df only has zeroes
 
+    # Since the board wraps around both vertically and horizontally, the outcome
+    # is not the same as it would be in a larger, empty board (save for the
+    # initial pattern), see the larger version of this test.
     assert_frame_equal(
         df,
         pl.DataFrame(
             {
-                "0": [1, 1, 1],
-                "1": [1, 0, 0],
-                "2": [1, 1, 0],
+                "0": [0, 0, 0],
+                "1": [0, 0, 0],
+                "2": [0, 0, 0],
             }
         ),
     )
