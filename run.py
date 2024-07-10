@@ -5,23 +5,24 @@ import sys
 from collections import OrderedDict
 from itertools import tee, islice
 from time import sleep
-from typing import Iterable
+from typing import Iterable, Any
 
 from game_of_life import life_step, parse_board, board_to_df
 import polars as pl
 
 
-def nwise[T](iterable: Iterable[T], n: int):
+def nwise(iterable: Iterable[Any], n: int):
     """Return overlapping n-tuples from an iterable."""
     iterators = tee(iterable, n)
     return [
         list(z) for z in zip(*(islice(it, i, None) for i, it in enumerate(iterators)))
     ]
 
-def nwise_wrapping[T](iterable: Iterable[T], n: int):
+
+def nwise_wrapping(iterable: Iterable[Any], n: int):
     """Return overlapping n-tuples from an iterable."""
     elements = list(iterable)
-    to_be_wrapped = elements[-(n-2):] + elements + elements[:n-2]
+    to_be_wrapped = elements[-(n - 2) :] + elements + elements[: n - 2]
     iterators = tee(to_be_wrapped, n)
     return [
         list(z) for z in zip(*(islice(it, i, None) for i, it in enumerate(iterators)))
@@ -54,7 +55,6 @@ class Application:
         # Creates a pl.DataFrame from the provided file
         self.df = board_to_df(parse_board(self.ifile))
 
-
     def __str__(self) -> str:
         res = io.StringIO()
         with (
@@ -64,7 +64,7 @@ class Application:
             print(self.df)
         return res.getvalue()
 
-    def step(
+    def start(
         self,
         n: int | None = None,
         delay: float | None = None,
@@ -108,4 +108,4 @@ class Application:
 
 if __name__ == "__main__":
     app = Application()
-    app.step()
+    app.start()
