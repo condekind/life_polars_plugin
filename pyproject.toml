@@ -3,7 +3,7 @@ requires = ["maturin>=1.0,<2.0", "polars>=0.20.6"]
 build-backend = "maturin"
 
 [project]
-name = "game-of-life"
+name = "polars-game-of-life"
 version = "0.1.0"
 description = "A polars plugin to showcase some features of the plugin system."
 authors = [

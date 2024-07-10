@@ -196,17 +196,6 @@ source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "ee1b05cbd864bcaecbd3455d6d967862d446e4ebfc3c2e5e5b9841e53cba6673"
 
 [[package]]
-name = "game-of-life"
-version = "0.1.0"
-dependencies = [
- "jemallocator",
- "polars",
- "pyo3",
- "pyo3-polars",
- "serde",
-]
-
-[[package]]
 name = "getrandom"
 version = "0.2.15"
 source = "registry+https://github.com/rust-lang/crates.io-index"
@@ -580,6 +569,17 @@ checksum = "8dcdcfe31ddc9f5482dd001dfbc120ad48a0aa9a05420187fefcc2032ae26730"
 dependencies = [
  "polars-arrow",
  "polars-core",
+]
+
+[[package]]
+name = "polars-game-of-life"
+version = "0.1.0"
+dependencies = [
+ "jemallocator",
+ "polars",
+ "pyo3",
+ "pyo3-polars",
+ "serde",
 ]
 
 [[package]]
