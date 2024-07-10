@@ -2,31 +2,10 @@ import argparse
 import contextlib
 import io
 import sys
-from collections import OrderedDict
-from itertools import tee, islice
 from time import sleep
-from typing import Iterable, Any
 
-from game_of_life import life_step, parse_board, board_to_df
+from game_of_life import parse_board, board_to_df, step
 import polars as pl
-
-
-def nwise(iterable: Iterable[Any], n: int):
-    """Return overlapping n-tuples from an iterable."""
-    iterators = tee(iterable, n)
-    return [
-        list(z) for z in zip(*(islice(it, i, None) for i, it in enumerate(iterators)))
-    ]
-
-
-def nwise_wrapping(iterable: Iterable[Any], n: int):
-    """Return overlapping n-tuples from an iterable."""
-    elements = list(iterable)
-    to_be_wrapped = elements[-(n - 2) :] + elements + elements[: n - 2]
-    iterators = tee(to_be_wrapped, n)
-    return [
-        list(z) for z in zip(*(islice(it, i, None) for i, it in enumerate(iterators)))
-    ]
 
 
 class Application:
@@ -76,34 +55,25 @@ class Application:
         if delay is None:
             delay = self.delay
 
-        # colnums: [['00', '01', '02'], ['01', '02', '03'], ... ]
-        colnums = nwise_wrapping([f"{idx:02}" for idx in range(self.df.width)], 3)
-
-        # colnames: ['01', '02', '03', ... ]
-        colnames = [cols[1] for cols in colnums]
-
-        # colvalues: [<Expr ['col("00")./home/…'] at 0x7B7C253C7E60>, ... ]
-        colvalues = [life_step(*tuple(cols)) for cols in colnums]
-
-        if n <= 1 and print_df:
+        if print_df:
             print(self)
-            return
 
-        with pl.Config(tbl_rows=-1, tbl_cols=-1):
-            cnt = 1
-            try:
-                for _ in range(n):
-                    self.df = self.df.with_columns(
-                        **OrderedDict(zip(colnames, colvalues)),
-                    )
+        iteration_cnt = 0
+        try:
+            for _ in range(n):
+                self.df = step(self.df)
+                iteration_cnt += 1
+                if print_df:
                     # Clear screen
                     print("\033[2J")
-                    print(self.df)
-                    cnt += 1
-                    sleep(delay)
-            except KeyboardInterrupt:
-                print(f"\nKeyboard Interrupt: ran for {cnt} iterations. Aborting...")
-                print(f"{self._args.num_steps=}\n{self._args.delay}")
+                    print(self)
+                sleep(delay)
+
+        except KeyboardInterrupt:
+            print(
+                f"\nKeyboard Interrupt: ran for {iteration_cnt} iterations. Aborting..."
+            )
+            print(f"max_num_steps={self._args.num_steps}\ndelay={self._args.delay}")
 
 
 if __name__ == "__main__":
