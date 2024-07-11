@@ -5,8 +5,7 @@ use pyo3_polars::derive::polars_expr;
 
 #[polars_expr(output_type=Int64)]
 fn life_step(inputs: &[Series]) -> PolarsResult<Series> {
-    let (left, curr, right) = (&inputs[0], &inputs[1], &inputs[2]);
-    let (ca_lf, ca_curr, ca_rt) = (left.i64()?, curr.i64()?, right.i64()?);
+    let (ca_lf, ca_curr, ca_rt) = (inputs[0].i64()?, inputs[1].i64()?, inputs[2].i64()?);
 
     let lf = ca_lf
         .cont_slice()
