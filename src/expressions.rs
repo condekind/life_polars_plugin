@@ -7,31 +7,39 @@ use pyo3_polars::derive::polars_expr;
 fn life_step(inputs: &[Series]) -> PolarsResult<Series> {
     let (left, curr, right) = (&inputs[0], &inputs[1], &inputs[2]);
     let (ca_lf, ca_curr, ca_rt) = (left.i64()?, curr.i64()?, right.i64()?);
-    let len = ca_curr.len();
+
+    let lf = ca_lf
+        .cont_slice()
+        .expect("Expected input to be contiguous (in a single chunk)");
+    let mid = ca_curr
+        .cont_slice()
+        .expect("Expected input to be contiguous (in a single chunk)");
+    let rt = ca_rt
+        .cont_slice()
+        .expect("Expected input to be contiguous (in a single chunk)");
+
+    let len = lf.len();
 
     let mut out: Int64Chunked = ca_curr
         .into_no_null_iter()
         .enumerate()
         .map(|(idx, val)| {
+            // Neighbours above
             let prev_row = if 0 == idx {
-                ca_lf.get(len - 1).unwrap_or(0)
-                    + ca_curr.get(len - 1).unwrap_or(0)
-                    + ca_rt.get(len - 1).unwrap_or(0)
+                lf[len - 1] + mid[len - 1] + rt[len - 1]
             } else {
-                ca_lf.get(idx - 1).unwrap_or(0)
-                    + ca_curr.get(idx - 1).unwrap_or(0)
-                    + ca_rt.get(idx - 1).unwrap_or(0)
+                lf[idx - 1] + mid[idx - 1] + rt[idx - 1]
             };
 
-            // Curr row does not include cell in the middle, a cell is not a neighbour of itself
-            let curr_row = ca_lf.get(idx).unwrap_or(0) + ca_rt.get(idx).unwrap_or(0);
+            // Curr row does not include cell in the middle,
+            // a cell is not a neighbour of itself
+            let curr_row = lf[idx] + rt[idx];
 
+            // Neighbours below
             let next_row = if len - 1 == idx {
-                ca_lf.get(0).unwrap_or(0) + ca_curr.get(0).unwrap_or(0) + ca_rt.get(0).unwrap_or(0)
+                lf[0] + mid[0] + rt[0]
             } else {
-                ca_lf.get(idx + 1).unwrap_or(0)
-                    + ca_curr.get(idx + 1).unwrap_or(0)
-                    + ca_rt.get(idx + 1).unwrap_or(0)
+                lf[idx + 1] + mid[idx + 1] + rt[idx + 1]
             };
 
             // Life logic
