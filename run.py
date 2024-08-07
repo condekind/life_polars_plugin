@@ -17,9 +17,7 @@ class Application:
         cli.add_argument("-i", "--input", type=str, required=True)
         cli.add_argument("-d", "--delay", type=float, default=0.2)
         cli.add_argument("-n", "--num-steps", type=int, default=sys.maxsize)
-        # Not impl
-        # cli.add_argument('--alive-char', type=str, required='█')
-        # cli.add_argument('--dead-char', type=str, required='░')
+
         cli.parse_args(namespace=self._args)
 
         # [-i]

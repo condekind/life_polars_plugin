@@ -2,15 +2,13 @@ import fileinput
 from collections import OrderedDict
 from itertools import tee, islice
 from os import PathLike
-
 from pathlib import Path
 from typing import Iterable, Any
 
 import polars as pl
+from polars._typing import IntoExpr
 
 from game_of_life.utils import register_plugin
-
-from polars._typing import IntoExpr
 
 
 lib = Path(__file__).parent
@@ -32,15 +30,11 @@ def parse_board(
     into:
     [[0010],[0100]]
     """
-    try:
-        board = [
-            [c for ch in ln.strip() if (c := int(ch)) in [0, 1]]
-            for line in fileinput.input(ifile)
-            if len(ln := line.strip()) > 0
-        ]
-    except FileNotFoundError:
-        raise FileNotFoundError(f"Input file: {str(ifile)} not found!")
-    return board
+    return [
+        [c for ch in ln if (c := int(ch)) in [0, 1]]
+        for line in fileinput.input(ifile)
+        if len(ln := line.strip()) > 0
+    ]
 
 
 def _transpose(board: list[list[int]]) -> list[list[int]]:
